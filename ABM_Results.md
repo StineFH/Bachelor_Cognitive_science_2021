@@ -1,0 +1,377 @@
+Packages
+
+``` r
+library(pacman)
+p_load(tidyverse)
+p_load(splitstackshape)
+
+setwd("C:/Users/stine/OneDrive/Cognitive Science/5th_Semester/bachelor/ABM_Aarhus")
+```
+
+Import csv
+
+``` r
+base_sim_1 <- read_csv2("base_sim_1.csv")
+```
+
+    ## i Using ',' as decimal and '.' as grouping mark. Use `read_delim()` for more control.
+
+    ## 
+    ## -- Column specification --------------------------------------------------------
+    ## cols(
+    ##   `"agent_type","equally_good_1","original_postcode","move_1","move_2","move_3","move_4","move_5","move_6"` = col_character()
+    ## )
+
+``` r
+colnames(base_sim_1) <- "temporary"
+
+base_sim_1 <- cSplit(base_sim_1, "temporary", ",")
+
+colnames(base_sim_1) <- c("agent_type","equally_good_1","original_postcode","move_1","move_2","move_3","move_4","move_5","move_6")
+
+
+
+base_sim_2 <- read_csv2("building_sim_1.csv") 
+```
+
+    ## i Using ',' as decimal and '.' as grouping mark. Use `read_delim()` for more control.
+
+    ## 
+    ## -- Column specification --------------------------------------------------------
+    ## cols(
+    ##   `agent_type,"equally_good_1","original_postcode","move_1","move_2","move_3","move_4","move_5","move_6"` = col_character()
+    ## )
+
+``` r
+colnames(base_sim_2) <- "temporary"
+
+base_sim_2 <- cSplit(base_sim_2, "temporary", ",")
+
+colnames(base_sim_2) <- c("agent_type","equally_good_1","original_postcode","move_1","move_2","move_3","move_4","move_5","move_6")
+
+
+base_sim_3 <- read_csv2("int_sim_1.csv")
+```
+
+    ## i Using ',' as decimal and '.' as grouping mark. Use `read_delim()` for more control.
+    ## 
+    ## -- Column specification --------------------------------------------------------
+    ## cols(
+    ##   `agent_type,"equally_good_1","original_postcode","move_1","move_2","move_3","move_4","move_5","move_6"` = col_character()
+    ## )
+
+``` r
+colnames(base_sim_3) <- "temporary"
+
+base_sim_3 <- cSplit(base_sim_3, "temporary", ",")
+
+colnames(base_sim_3) <- c("agent_type","equally_good_1","original_postcode","move_1","move_2","move_3","move_4","move_5","move_6")
+```
+
+Make a column with all the postcodes that each agent ends up in
+
+``` r
+# MAke column with all the last choices (moves where the element to the right of them is NA)
+i=1
+the_last <- function(x){
+  x$last_move <- NA
+  for(i in 1:nrow(x)){
+  x$last_move[i] <-  x[i,max(which(!is.na(x[i,])))]
+  }
+  return(x)
+}
+
+base_sim_1 <- the_last(base_sim_1)
+
+base_sim_2 <- the_last(base_sim_2)
+
+base_sim_3 <- the_last(base_sim_3)
+```
+
+Finding the number of agents that end up living in each postcode
+
+``` r
+# Use group_by and count to count how many people live in each postcode (both for original Postcode column and the newly created column)
+original_living_count <- aggregate(base_sim_1$original_postcode, by=list(base_sim_1$original_postcode), FUN=length)
+last_move_count <-aggregate(base_sim_1$last_move, by=list(base_sim_1$last_move), FUN=length)
+
+
+
+original_living_count_2 <- aggregate(base_sim_2$original_postcode,
+                                     by=list(base_sim_2$original_postcode), FUN=length)
+last_move_count_2 <-aggregate(base_sim_2$last_move,
+                              by=list(base_sim_2$last_move), FUN=length)
+
+
+
+
+original_living_count_3 <- aggregate(base_sim_3$original_postcode,
+                                     by=list(base_sim_3$original_postcode), FUN=length)
+last_move_count_3 <- aggregate(base_sim_3$last_move, by=list(base_sim_3$last_move), FUN=length)
+```
+
+Making the number of agents in each postcode stand in column with all
+postcodes. Postcodes without any agents in are = 0
+
+``` r
+######## OVERVIEW #########
+envi <- read_csv2("environment_aarhus.csv")
+```
+
+    ## i Using ',' as decimal and '.' as grouping mark. Use `read_delim()` for more control.
+
+    ## Warning: Missing column names filled in: 'X1' [1]
+
+    ## 
+    ## -- Column specification --------------------------------------------------------
+    ## cols(
+    ##   X1 = col_double(),
+    ##   Postalcodes = col_double(),
+    ##   Names = col_character(),
+    ##   latitude = col_double(),
+    ##   longitude = col_double(),
+    ##   Green_area_distance = col_double(),
+    ##   Public_transport_distance = col_double(),
+    ##   Min_Mall_distance = col_double(),
+    ##   School_rating = col_double(),
+    ##   Owner_oc_housing_m2 = col_double(),
+    ##   Perc_non_western_im_desc = col_double(),
+    ##   Almenbolig_sd_rent = col_double()
+    ## )
+
+``` r
+envi <- envi[,-c(1, 4:5)]
+
+overview <- data.frame(Postcode = envi$Postalcodes)
+overview$base_line = NA
+
+i=1
+ordering <- function(over, last){
+  for (i in 1:length(over$Postcode)){
+    if(over$Postcode[i] %in% last$Group.1){
+      filt <- filter(last, over$Postcode[i] == last$Group.1)
+      over$base_line[i] <- filt$x
+    } else if(!over$Postcode[i] %in% last$Group.1){
+    over$base_line[i] <- 0
+    }
+  }
+  return(over)
+} 
+
+overview_1 <- ordering(over = overview, last = last_move_count)
+
+overview_2 <- ordering(over = overview, last = last_move_count_2)
+
+overview_3 <- ordering(over = overview, last = last_move_count_3)
+```
+
+Number of agent\_types that live in each postcode
+
+``` r
+# See what agent-types live in each postcode 
+by_type_move_count_1 <- aggregate(base_sim_1$last_move, by=list(base_sim_1$last_move,
+                                                                base_sim_1$agent_type), FUN=length)
+
+by_type_move_count_2 <- aggregate(base_sim_2$last_move,
+                                  by=list(base_sim_2$last_move,
+                                          base_sim_2$agent_type), FUN=length)
+
+by_type_move_count_3 <- aggregate(base_sim_3$last_move, by=list(base_sim_3$last_move,
+                                                                    base_sim_3$agent_type), FUN=length)
+```
+
+Dividing the df up into one for each agent type
+-----------------------------------------------
+
+``` r
+total_over_under_18 <-  read_csv("total_over_under_18.csv")
+```
+
+    ## 
+    ## -- Column specification --------------------------------------------------------
+    ## cols(
+    ##   Postcode = col_double(),
+    ##   `Danish origin` = col_double(),
+    ##   `Descendants from non_western countries` = col_double(),
+    ##   `Descendants from western countries` = col_double(),
+    ##   `Immigrants from non-western countries` = col_double(),
+    ##   `Immigrants from western countries` = col_double(),
+    ##   `In total` = col_double(),
+    ##   `Total non-western` = col_double(),
+    ##   `Total non-western households` = col_double()
+    ## )
+
+``` r
+sim_base_kids_high <- by_type_move_count_1 %>% filter(Group.2 == "kids_high_economy")
+sim_base_kids_high <- ordering(overview_1, sim_base_kids_high)
+
+sim_base_kids_high$dif_vs_real <- NA
+sim_base_kids_high$dif_vs_real <-  abs(total_over_under_18$`Total non-western households` - sim_base_kids_high$base_line)
+mean(sim_base_kids_high$dif_vs_real)
+```
+
+    ## [1] 746.2273
+
+``` r
+#write.csv(sim_base_kids_high, "results_base_kids_high.csv", row.names = FALSE)
+
+
+sim_base_no_high <- by_type_move_count_1 %>% filter(Group.2 == "no_kids_high_economy")
+sim_base_no_high <- ordering(overview_1, sim_base_no_high)
+
+sim_base_no_high$dif_vs_real <- NA
+sim_base_no_high$dif_vs_real <-  abs(total_over_under_18$`Total non-western households` - sim_base_no_high$base_line)
+mean(sim_base_no_high$dif_vs_real)
+```
+
+    ## [1] 746.2273
+
+``` r
+#write.csv(sim_base_no_high, "results_base_no_high.csv", row.names = FALSE)
+
+
+sim_base_kids_low <- by_type_move_count_1 %>% filter(Group.2 == "kids_low_economy")
+sim_base_kids_low <- ordering(overview_1, sim_base_kids_low)
+
+sim_base_kids_low$dif_vs_real <- NA
+sim_base_kids_low$dif_vs_real <-  abs(total_over_under_18$`Total non-western households` - sim_base_kids_low$base_line)
+mean(sim_base_kids_low$dif_vs_real)
+```
+
+    ## [1] 746.2273
+
+``` r
+#write.csv(sim_base_kids_low, "results_base_kids_low.csv", row.names = FALSE)
+
+
+
+sim_base_no_low <- by_type_move_count_1 %>% filter(Group.2 == "no_kids_low_economy")
+sim_base_no_low <- ordering(overview_1, sim_base_no_low)
+
+sim_base_no_low$dif_vs_real <-  abs(total_over_under_18$`Total non-western households` - sim_base_no_low$base_line)
+mean(sim_base_no_low$dif_vs_real)
+```
+
+    ## [1] 746.2273
+
+``` r
+#write.csv(sim_base_no_low, "results_base_no_low.csv", row.names = FALSE)
+```
+
+Comparing it with the actual number of people in each postcode
+
+``` r
+############# COMPARING base simulation with number in real life ###############
+total_over_under_18 <-  read_csv("total_over_under_18.csv")
+```
+
+    ## 
+    ## -- Column specification --------------------------------------------------------
+    ## cols(
+    ##   Postcode = col_double(),
+    ##   `Danish origin` = col_double(),
+    ##   `Descendants from non_western countries` = col_double(),
+    ##   `Descendants from western countries` = col_double(),
+    ##   `Immigrants from non-western countries` = col_double(),
+    ##   `Immigrants from western countries` = col_double(),
+    ##   `In total` = col_double(),
+    ##   `Total non-western` = col_double(),
+    ##   `Total non-western households` = col_double()
+    ## )
+
+``` r
+overview_1$dif_vs_real <- NA
+overview_1$dif_vs_real <-  abs(total_over_under_18$`Total non-western households` - overview_1$base_line)
+mean(overview_1$dif_vs_real)
+```
+
+    ## [1] 746.2273
+
+``` r
+#write.csv(overview_1, "results_base_1.csv", row.names = FALSE)
+
+
+################################# Comparing build sim with base sim ####################
+overview_2$dif_vs_base <- NA
+overview_2$dif_vs_base <-  abs(overview_1$base_line - overview_2$base_line)
+mean(overview_2$dif_vs_base) # Average difference between base and int simulation
+```
+
+    ## [1] 0
+
+``` r
+#write.csv(overview_2, "results_build_1.csv", row.names = FALSE)
+
+
+
+################################# Comparing int sim with base sim ####################
+overview_3$dif_vs_base <- NA
+overview_3$dif_vs_base <-  abs(overview_1$base_line - overview_3$base_line)
+mean(overview_3$dif_vs_base) # Average difference between base and int simulation
+```
+
+    ## [1] 0
+
+``` r
+#write.csv(overview_3, "results_int_1.csv", row.names = FALSE)
+```
+
+Creating total df
+
+``` r
+over_18 <- read_csv2("indvandrere_aarhus_over_18.csv")
+```
+
+    ## i Using ',' as decimal and '.' as grouping mark. Use `read_delim()` for more control.
+
+    ## 
+    ## -- Column specification --------------------------------------------------------
+    ## cols(
+    ##   Postnummer = col_character(),
+    ##   Postdistrikt = col_character(),
+    ##   `Dansk oprindelse` = col_double(),
+    ##   `Efterkommere fra ikke-vestlige lande` = col_double(),
+    ##   `Efterkommere fra vestlige lande` = col_double(),
+    ##   `Indvandrere fra ikke-vestlige lande` = col_double(),
+    ##   `Indvandrere fra vestlige lande` = col_double()
+    ## )
+
+``` r
+over <- as.matrix(over_18[1:22,3:7])
+over <- cbind(over, over[,1]+over[,2]+over[,3]+over[,4]+over[,5]) #creating total column 
+
+
+under_18 <- read_csv2("indvandrere_aarhus_under_18.csv")
+```
+
+    ## i Using ',' as decimal and '.' as grouping mark. Use `read_delim()` for more control.
+    ## 
+    ## -- Column specification --------------------------------------------------------
+    ## cols(
+    ##   Postnummer = col_character(),
+    ##   Postdistrikt = col_character(),
+    ##   `Dansk oprindelse` = col_double(),
+    ##   `Efterkommere fra ikke-vestlige lande` = col_double(),
+    ##   `Efterkommere fra vestlige lande` = col_double(),
+    ##   `Indvandrere fra ikke-vestlige lande` = col_double(),
+    ##   `Indvandrere fra vestlige lande` = col_double()
+    ## )
+
+``` r
+under <- as.matrix(under_18[1:22,3:7])
+under <- cbind(under, under[,1]+under[,2]+under[,3]+under[,4]+under[,5])
+
+
+total_over_under_18 <- over + under # Creating matrix with total amount of people 
+total_over_under_18 = cbind(total_over_under_18, total_over_under_18[,2] + total_over_under_18[,4]) # Column with total amount of non-western 
+total_over_under_18 =  cbind(total_over_under_18, round(total_over_under_18[,7]/2.5))
+
+total_over_under_18 <- cbind(over_18$Postnummer[1:22], total_over_under_18)
+
+#Change column names 
+colnames(total_over_under_18) <- c("Postcode", "Danish origin", "Descendants from non_western countries", "Descendants from western countries", "Immigrants from non-western countries", "Immigrants from western countries", "In total", "Total non-western", "Total non-western households")
+
+total_over_under_18 <- as.data.frame(total_over_under_18)
+
+#write.csv(total_over_under_18, "total_over_under_18.csv", row.names = FALSE)
+```
