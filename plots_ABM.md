@@ -1,0 +1,1178 @@
+Load Packages
+
+``` r
+library(pacman)
+p_load(tidyverse)
+p_load(sf, lwgeom)
+p_load(ggplot2)
+p_load(sp)
+p_load(rgdal)
+p_load(broom)
+p_load(maptools)
+p_load(gridExtra)
+```
+
+################################## MAP Plots
+
+Fix the jumbled data in gg so that each postcode can be matched with a
+number of households:
+
+``` r
+#adds the number of immigrants that ends up in each postcode in simulation
+add_sim_to_gg <- function(gg_object, overview){
+  
+  gg_object$data$number_immigrants <- NA
+  gg_object$data$postcode <- NA
+  gg_object$data$number_immigrants[1:33] <-
+   overview$base_line[overview$POSTNR_TXT==8380]
+  gg_object$data$postcode[1:33] <- 8380
+  
+  gg_object$data$number_immigrants[34:64] <-
+    overview$base_line[overview$POSTNR_TXT==8310]
+  gg_object$data$postcode[34:64] <- 8310
+  
+  gg_object$data$number_immigrants[65:125] <-
+    overview$base_line[overview$POSTNR_TXT==8340]
+  gg_object$data$postcode[65:125] <- 8340
+  
+  gg_object$data$number_immigrants[126:170] <-
+    overview$base_line[overview$POSTNR_TXT==8270]
+  gg_object$data$postcode[126:170] <- 8270
+  
+  gg_object$data$number_immigrants[171:200] <- 
+    overview$base_line[overview$POSTNR_TXT==8330]
+  gg_object$data$postcode[171:200] <- 8330
+  
+  gg_object$data$number_immigrants[201:243] <- 
+    overview$base_line[overview$POSTNR_TXT==8530]
+  gg_object$data$postcode[201:243] <- 8530
+  
+  gg_object$data$number_immigrants[244:267] <- 
+    overview$base_line[overview$POSTNR_TXT==8320]
+  gg_object$data$postcode[244:267] <- 8320 
+  
+  gg_object$data$number_immigrants[245:296] <-
+    overview$base_line[overview$POSTNR_TXT==8462]
+  gg_object$data$postcode[245:296] <- 8462 
+  
+  gg_object$data$number_immigrants[297:321] <- 
+     overview$base_line[overview$POSTNR_TXT==8230]
+  gg_object$data$postcode[297:321] <-8230
+  
+  gg_object$data$number_immigrants[322:353] <-
+    overview$base_line[overview$POSTNR_TXT==8381]
+  gg_object$data$postcode[322:353] <-8381
+  
+  
+  gg_object$data$number_immigrants[354:395] <-
+     overview$base_line[overview$POSTNR_TXT==8250]
+  gg_object$data$postcode[354:395] <- 8250
+    
+  gg_object$data$number_immigrants[396:422] <-
+    overview$base_line[overview$POSTNR_TXT==8361]
+  gg_object$data$postcode[396:422] <- 8361
+  
+  gg_object$data$number_immigrants[423:462] <- 
+    overview$base_line[overview$POSTNR_TXT==8260]
+  gg_object$data$postcode[423:462] <- 8260
+  
+  gg_object$data$number_immigrants[463:544] <- 
+    overview$base_line[overview$POSTNR_TXT==8000]
+  gg_object$data$postcode[463:544] <- 8000
+  
+  gg_object$data$number_immigrants[545:579] <-
+    overview$base_line[overview$POSTNR_TXT==8355]
+  gg_object$data$postcode[545:579] <- 8355
+  
+  gg_object$data$number_immigrants[580:608] <-
+    overview$base_line[overview$POSTNR_TXT==8520]
+  gg_object$data$postcode[580:608] <- 8520
+  
+  gg_object$data$number_immigrants[609:651] <-
+    overview$base_line[overview$POSTNR_TXT==8471]
+  gg_object$data$postcode[609:651] <- 8471
+    
+  gg_object$data$number_immigrants[652:684] <-
+    overview$base_line[overview$POSTNR_TXT==8200]
+  gg_object$data$postcode[652:684] <- 8200
+    
+  gg_object$data$number_immigrants[685:737] <-
+    overview$base_line[overview$POSTNR_TXT==8541]
+  gg_object$data$postcode[685:737] <- 8541
+    
+  gg_object$data$number_immigrants[738:761] <- 
+    overview$base_line[overview$POSTNR_TXT==8541] 
+  gg_object$data$postcode[738:761] <- 8541
+  
+  gg_object$data$number_immigrants[762:792] <-
+    overview$base_line[overview$POSTNR_TXT==8240]
+  gg_object$data$postcode[762:792] <- 8240
+  
+  gg_object$data$number_immigrants[793:816] <-
+    overview$base_line[overview$POSTNR_TXT==8210]
+  gg_object$data$postcode[793:816] <- 8210
+  
+  gg_object$data$number_immigrants[817:846] <- 
+    overview$base_line[overview$POSTNR_TXT==8220]
+  gg_object$data$postcode[817:846] <- 8220
+  
+  return(gg_object)
+}
+
+#Adds the difference between real and simulated data (accuracy) 
+add_abs_diff_to_base_gg <- function(gg_object, overview){
+  
+  gg_object$data$abs_diff_real_sim <- NA
+  gg_object$data$postcode <- NA
+  
+  gg_object$data$abs_diff_real_sim[1:33] <-
+   overview$dif_vs_real[overview$POSTNR_TXT==8380]
+  gg_object$data$postcode[1:33] <- 8380
+  
+  gg_object$data$abs_diff_real_sim[34:64] <-
+    overview$dif_vs_real[overview$POSTNR_TXT==8310]
+  gg_object$data$postcode[34:64] <- 8310
+  
+  gg_object$data$abs_diff_real_sim[65:125] <-
+    overview$dif_vs_real[overview$POSTNR_TXT==8340]
+  gg_object$data$postcode[65:125] <- 8340
+  
+  gg_object$data$abs_diff_real_sim[126:170] <-
+    overview$dif_vs_real[overview$POSTNR_TXT==8270]
+  gg_object$data$postcode[126:170] <- 8270
+  
+  gg_object$data$abs_diff_real_sim[171:200] <- 
+    overview$dif_vs_real[overview$POSTNR_TXT==8330]
+  gg_object$data$postcode[171:200] <- 8330
+  
+  gg_object$data$abs_diff_real_sim[201:243] <- 
+    overview$dif_vs_real[overview$POSTNR_TXT==8530]
+  gg_object$data$postcode[201:243] <- 8530
+  
+  gg_object$data$abs_diff_real_sim[244:267] <- 
+    overview$dif_vs_real[overview$POSTNR_TXT==8320]
+  gg_object$data$postcode[244:267] <- 8320 
+  
+  gg_object$data$abs_diff_real_sim[245:296] <-
+    overview$dif_vs_real[overview$POSTNR_TXT==8462]
+  gg_object$data$postcode[245:296] <- 8462 
+  
+  gg_object$data$abs_diff_real_sim[297:321] <- 
+     overview$dif_vs_real[overview$POSTNR_TXT==8230]
+  gg_object$data$postcode[297:321] <-8230
+  
+  gg_object$data$abs_diff_real_sim[322:353] <-
+    overview$dif_vs_real[overview$POSTNR_TXT==8381]
+  gg_object$data$postcode[322:353] <-8381
+  
+  
+  gg_object$data$abs_diff_real_sim[354:395] <-
+     overview$dif_vs_real[overview$POSTNR_TXT==8250]
+  gg_object$data$postcode[354:395] <- 8250
+    
+  gg_object$data$abs_diff_real_sim[396:422] <-
+    overview$dif_vs_real[overview$POSTNR_TXT==8361]
+  gg_object$data$postcode[396:422] <- 8361
+  
+  gg_object$data$abs_diff_real_sim[423:462] <- 
+    overview$dif_vs_real[overview$POSTNR_TXT==8260]
+  gg_object$data$postcode[423:462] <- 8260
+  
+  gg_object$data$abs_diff_real_sim[463:544] <- 
+    overview$dif_vs_real[overview$POSTNR_TXT==8000]
+  gg_object$data$postcode[463:544] <- 8000
+  
+  gg_object$data$abs_diff_real_sim[545:579] <-
+    overview$dif_vs_real[overview$POSTNR_TXT==8355]
+  gg_object$data$postcode[545:579] <- 8355
+  
+  gg_object$data$abs_diff_real_sim[580:608] <-
+    overview$dif_vs_real[overview$POSTNR_TXT==8520]
+  gg_object$data$postcode[580:608] <- 8520
+  
+  gg_object$data$abs_diff_real_sim[609:651] <-
+    overview$dif_vs_real[overview$POSTNR_TXT==8471]
+  gg_object$data$postcode[609:651] <- 8471
+    
+  gg_object$data$abs_diff_real_sim[652:684] <-
+    overview$dif_vs_real[overview$POSTNR_TXT==8200]
+  gg_object$data$postcode[652:684] <- 8200
+    
+  gg_object$data$abs_diff_real_sim[685:737] <-
+    overview$dif_vs_real[overview$POSTNR_TXT==8541]
+  gg_object$data$postcode[685:737] <- 8541
+    
+  gg_object$data$abs_diff_real_sim[738:761] <- 
+    overview$dif_vs_real[overview$POSTNR_TXT==8541] 
+  gg_object$data$postcode[738:761] <- 8541
+  
+  gg_object$data$abs_diff_real_sim[762:792] <-
+    overview$dif_vs_real[overview$POSTNR_TXT==8240]
+  gg_object$data$postcode[762:792] <- 8240
+  
+  gg_object$data$abs_diff_real_sim[793:816] <-
+    overview$dif_vs_real[overview$POSTNR_TXT==8210]
+  gg_object$data$postcode[793:816] <- 8210
+  
+  gg_object$data$abs_diff_real_sim[817:846] <- 
+    overview$dif_vs_real[overview$POSTNR_TXT==8220]
+  gg_object$data$postcode[817:846] <- 8220
+  
+  return(gg_object)
+}
+
+#Adds the difference between simulations with restrictions and base simulation  
+add_abs_diff_to_rest_gg <- function(gg_object, overview){
+  
+  gg_object$data$abs_diff_base_sim <- NA
+  gg_object$data$postcode <- NA
+  
+  gg_object$data$abs_diff_base_sim[1:33] <-
+   overview$dif_vs_base[overview$POSTNR_TXT==8380]
+  gg_object$data$postcode[1:33] <- 8380
+  
+  gg_object$data$abs_diff_base_sim[34:64] <-
+    overview$dif_vs_base[overview$POSTNR_TXT==8310]
+  gg_object$data$postcode[34:64] <- 8310
+  
+  gg_object$data$abs_diff_base_sim[65:125] <-
+    overview$dif_vs_base[overview$POSTNR_TXT==8340]
+  gg_object$data$postcode[65:125] <- 8340
+  
+  gg_object$data$abs_diff_base_sim[126:170] <-
+    overview$dif_vs_base[overview$POSTNR_TXT==8270]
+  gg_object$data$postcode[126:170] <- 8270
+  
+  gg_object$data$abs_diff_base_sim[171:200] <- 
+    overview$dif_vs_base[overview$POSTNR_TXT==8330]
+  gg_object$data$postcode[171:200] <- 8330
+  
+  gg_object$data$abs_diff_base_sim[201:243] <- 
+    overview$dif_vs_base[overview$POSTNR_TXT==8530]
+  gg_object$data$postcode[201:243] <- 8530
+  
+  gg_object$data$abs_diff_base_sim[244:267] <- 
+    overview$dif_vs_base[overview$POSTNR_TXT==8320]
+  gg_object$data$postcode[244:267] <- 8320 
+  
+  gg_object$data$abs_diff_base_sim[245:296] <-
+    overview$dif_vs_base[overview$POSTNR_TXT==8462]
+  gg_object$data$postcode[245:296] <- 8462 
+  
+  gg_object$data$abs_diff_base_sim[297:321] <- 
+     overview$dif_vs_base[overview$POSTNR_TXT==8230]
+  gg_object$data$postcode[297:321] <-8230
+  
+  gg_object$data$abs_diff_base_sim[322:353] <-
+    overview$dif_vs_base[overview$POSTNR_TXT==8381]
+  gg_object$data$postcode[322:353] <-8381
+  
+  
+  gg_object$data$abs_diff_base_sim[354:395] <-
+     overview$dif_vs_base[overview$POSTNR_TXT==8250]
+  gg_object$data$postcode[354:395] <- 8250
+    
+  gg_object$data$abs_diff_base_sim[396:422] <-
+    overview$dif_vs_base[overview$POSTNR_TXT==8361]
+  gg_object$data$postcode[396:422] <- 8361
+  
+  gg_object$data$abs_diff_base_sim[423:462] <- 
+    overview$dif_vs_base[overview$POSTNR_TXT==8260]
+  gg_object$data$postcode[423:462] <- 8260
+  
+  gg_object$data$abs_diff_base_sim[463:544] <- 
+    overview$dif_vs_base[overview$POSTNR_TXT==8000]
+  gg_object$data$postcode[463:544] <- 8000
+  
+  gg_object$data$abs_diff_base_sim[545:579] <-
+    overview$dif_vs_base[overview$POSTNR_TXT==8355]
+  gg_object$data$postcode[545:579] <- 8355
+  
+  gg_object$data$abs_diff_base_sim[580:608] <-
+    overview$dif_vs_base[overview$POSTNR_TXT==8520]
+  gg_object$data$postcode[580:608] <- 8520
+  
+  gg_object$data$abs_diff_base_sim[609:651] <-
+    overview$dif_vs_base[overview$POSTNR_TXT==8471]
+  gg_object$data$postcode[609:651] <- 8471
+    
+  gg_object$data$abs_diff_base_sim[652:684] <-
+    overview$dif_vs_base[overview$POSTNR_TXT==8200]
+  gg_object$data$postcode[652:684] <- 8200
+    
+  gg_object$data$abs_diff_base_sim[685:737] <-
+    overview$dif_vs_base[overview$POSTNR_TXT==8541]
+  gg_object$data$postcode[685:737] <- 8541
+    
+  gg_object$data$abs_diff_base_sim[738:761] <- 
+    overview$dif_vs_base[overview$POSTNR_TXT==8541] 
+  gg_object$data$postcode[738:761] <- 8541
+  
+  gg_object$data$abs_diff_base_sim[762:792] <-
+    overview$dif_vs_base[overview$POSTNR_TXT==8240]
+  gg_object$data$postcode[762:792] <- 8240
+  
+  gg_object$data$abs_diff_base_sim[793:816] <-
+    overview$dif_vs_base[overview$POSTNR_TXT==8210]
+  gg_object$data$postcode[793:816] <- 8210
+  
+  gg_object$data$abs_diff_base_sim[817:846] <- 
+    overview$dif_vs_base[overview$POSTNR_TXT==8220]
+  gg_object$data$postcode[817:846] <- 8220
+  
+  return(gg_object)
+}
+
+#Put in original number of households with non-western immigrants in each postcode 
+add_original <- function(gg_object, total){
+  
+  gg_object$data$acutal_number_households <- NA
+  gg_object$data$postcode <- NA
+  gg_object$data$acutal_number_households[1:33] <-
+   total$`Total non-western households`[total$POSTNR_TXT==8380]
+  gg_object$data$postcode[1:33] <- 8380
+  
+  gg_object$data$acutal_number_households[34:64] <-
+    total$`Total non-western households`[total$POSTNR_TXT==8310]
+  gg_object$data$postcode[34:64] <- 8310
+  
+  gg_object$data$acutal_number_households[65:125] <-
+    total$`Total non-western households`[total$POSTNR_TXT==8340]
+  gg_object$data$postcode[65:125] <- 8340
+  
+  gg_object$data$acutal_number_households[126:170] <-
+    total$`Total non-western households`[total$POSTNR_TXT==8270]
+  gg_object$data$postcode[126:170] <- 8270
+  
+  gg_object$data$acutal_number_households[171:200] <- 
+    total$`Total non-western households`[total$POSTNR_TXT==8330]
+  gg_object$data$postcode[171:200] <- 8330
+  
+  gg_object$data$acutal_number_households[201:243] <- 
+    total$`Total non-western households`[total$POSTNR_TXT==8530]
+  gg_object$data$postcode[201:243] <- 8530
+  
+  gg_object$data$acutal_number_households[244:267] <- 
+    total$`Total non-western households`[total$POSTNR_TXT==8320]
+  gg_object$data$postcode[244:267] <- 8320 
+  
+  gg_object$data$acutal_number_households[245:296] <-
+    total$`Total non-western households`[total$POSTNR_TXT==8462]
+  gg_object$data$postcode[245:296] <- 8462 
+  
+  gg_object$data$acutal_number_households[297:321] <- 
+     total$`Total non-western households`[total$POSTNR_TXT==8230]
+  gg_object$data$postcode[297:321] <-8230
+  
+  gg_object$data$acutal_number_households[322:353] <-
+    total$`Total non-western households`[total$POSTNR_TXT==8381]
+  gg_object$data$postcode[322:353] <-8381
+  
+  
+  gg_object$data$acutal_number_households[354:395] <-
+     total$`Total non-western households`[total$POSTNR_TXT==8250]
+  gg_object$data$postcode[354:395] <- 8250
+    
+  gg_object$data$acutal_number_households[396:422] <-
+    total$`Total non-western households`[total$POSTNR_TXT==8361]
+  gg_object$data$postcode[396:422] <- 8361
+  
+  gg_object$data$acutal_number_households[423:462] <- 
+    total$`Total non-western households`[total$POSTNR_TXT==8260]
+  gg_object$data$postcode[423:462] <- 8260
+  
+  gg_object$data$acutal_number_households[463:544] <- 
+    total$`Total non-western households`[total$POSTNR_TXT==8000]
+  gg_object$data$postcode[463:544] <- 8000
+  
+  gg_object$data$acutal_number_households[545:579] <-
+    total$`Total non-western households`[total$POSTNR_TXT==8355]
+  gg_object$data$postcode[545:579] <- 8355
+  
+  gg_object$data$acutal_number_households[580:608] <-
+    total$`Total non-western households`[total$POSTNR_TXT==8520]
+  gg_object$data$postcode[580:608] <- 8520
+  
+  gg_object$data$acutal_number_households[609:651] <-
+    total$`Total non-western households`[total$POSTNR_TXT==8471]
+  gg_object$data$postcode[609:651] <- 8471
+    
+  gg_object$data$acutal_number_households[652:684] <-
+    total$`Total non-western households`[total$POSTNR_TXT==8200]
+  gg_object$data$postcode[652:684] <- 8200
+    
+  gg_object$data$acutal_number_households[685:737] <-
+    total$`Total non-western households`[total$POSTNR_TXT==8541]
+  gg_object$data$postcode[685:737] <- 8541
+    
+  gg_object$data$acutal_number_households[738:761] <- 
+    total$`Total non-western households`[total$POSTNR_TXT==8541] 
+  gg_object$data$postcode[738:761] <- 8541
+  
+  gg_object$data$acutal_number_households[762:792] <-
+    total$`Total non-western households`[total$POSTNR_TXT==8240]
+  gg_object$data$postcode[762:792] <- 8240
+  
+  gg_object$data$acutal_number_households[793:816] <-
+    total$`Total non-western households`[total$POSTNR_TXT==8210]
+  gg_object$data$postcode[793:816] <- 8210
+  
+  gg_object$data$acutal_number_households[817:846] <- 
+    total$`Total non-western households`[total$POSTNR_TXT==8220]
+  gg_object$data$postcode[817:846] <- 8220
+  
+  return(gg_object)
+}
+```
+
+Number of immigrant households in each postcode: Original vs. base
+simulation
+
+``` r
+## Import aarhus data 
+post <- readOGR("postalcodes_aarhus.shp")
+```
+
+    ## OGR data source with driver: ESRI Shapefile 
+    ## Source: "C:\Users\stine\OneDrive\Cognitive Science\5th_Semester\bachelor\ABM_Aarhus\postalcodes_aarhus.shp", layer: "postalcodes_aarhus"
+    ## with 23 features
+    ## It has 2 fields
+
+``` r
+###################################### GG Base Simulation #################################
+#Import results 
+overview_1 <- read.csv("results_base_1.csv")
+colnames(overview_1)[1] <- "POSTNR_TXT" # Making sure the column names are identical for merge
+#add the extra part of postcode
+overview_1 <- rbind(overview_1[1:19,], overview_1[19,], overview_1[20:22,])
+
+# Make overview dataframe in same order as plotorder in post 
+overview_1$group <- seq(1:23)
+overview_1 <- overview_1[match(post@plotOrder, overview_1$group),]
+overview_1$group <- seq(1:23) # Making the group variable identical to the one in gg object
+row.names(overview_1) <- seq(1:23)
+overview_1[23,1] <- 8472 # Change name of extra postcode so it can merge 
+
+post_merge <- sp::merge(post, overview_1, by = "POSTNR_TXT")
+
+# Add in postcode numbers 
+shp_df <- broom::tidy(post_merge, region = "POSTNR_TXT")
+lapply(shp_df, class)
+```
+
+    ## $long
+    ## [1] "numeric"
+    ## 
+    ## $lat
+    ## [1] "numeric"
+    ## 
+    ## $order
+    ## [1] "integer"
+    ## 
+    ## $hole
+    ## [1] "logical"
+    ## 
+    ## $piece
+    ## [1] "factor"
+    ## 
+    ## $group
+    ## [1] "factor"
+    ## 
+    ## $id
+    ## [1] "character"
+
+``` r
+cnames <- aggregate(cbind(long, lat) ~ id, data=shp_df, FUN=mean)
+
+#Changing positions of postcode names that are not on the borders 
+cnames[1,2] <- cnames[1,2]-sd(shp_df$long[shp_df$id==8000])
+cnames[7,2] <- cnames[7,2]-sd(shp_df$long[shp_df$id==8250])
+cnames[8,3] <- cnames[8,3]+sd(shp_df$lat[shp_df$id==8260])/2
+# Put in the data from simulation to be added as color gradient 
+test_gg <- ggplot(data = post)
+```
+
+    ## Regions defined for each Polygons
+
+``` r
+test_gg <- add_sim_to_gg(test_gg, overview_1)
+test_gg <- add_abs_diff_to_base_gg(test_gg, overview_1) 
+
+################################### Plot number of immigrants ############################
+#log transform number of immigrants so variability is visible 
+test_gg$data$log_number_immigrants <- ifelse(test_gg$data$number_immigrants>0, log(test_gg$data$number_immigrants), test_gg$data$number_immigrants)
+
+base_number <-  test_gg + geom_polygon(aes(x = long, y = lat, group = group, fill = log_number_immigrants), col="black") + 
+  scale_fill_gradientn(colours = c( "#ffffe5", "#fff7bc", "#fee391", "#fec44f", "#fe9929", "#ec7014", "#cc4c02", "#993404", "#662506")) + 
+  theme_void() + 
+  geom_text(data = cnames, aes(x = long, y = lat, label = id), size = 4) + 
+  labs(title = "Number of Immigrant Households in Each Postcode in Base Simulation \nLog-Transformed", fill = "Log-Transformed \nNumber of Households") + 
+    theme(plot.title = element_text(6))
+
+################################## Plot Abs difference from original ######################
+#log transform absolute difference in immigrants so variability is visible 
+test_gg$data$log_abs_diff_real_sim <- ifelse(test_gg$data$abs_diff_real_sim>0, log(test_gg$data$abs_diff_real_sim), test_gg$data$abs_diff_real_sim)
+
+base_diff <- test_gg + geom_polygon(aes(x = long, y = lat, group = group, fill = log_abs_diff_real_sim), col="black") + 
+  scale_fill_gradientn(colours = c( "#ffffe5", "#fff7bc", "#fee391", "#fec44f", "#fe9929", "#ec7014", "#cc4c02", "#993404", "#662506")) +
+  theme_void() + 
+  geom_text(data = cnames, aes(x = long, y = lat, label = id), size = 4, color = "black") +
+  labs(title = "Absolute Difference Between Real Number of Immigrant Households and Simulated \nLog-transformed", fill = "Log-transformed \nDifferences") 
+
+################################## Original number plot ###################################
+original_number <- read_csv("total_over_under_18.csv")
+```
+
+    ## 
+    ## -- Column specification --------------------------------------------------------
+    ## cols(
+    ##   Postcode = col_double(),
+    ##   `Danish origin` = col_double(),
+    ##   `Descendants from non_western countries` = col_double(),
+    ##   `Descendants from western countries` = col_double(),
+    ##   `Immigrants from non-western countries` = col_double(),
+    ##   `Immigrants from western countries` = col_double(),
+    ##   `In total` = col_double(),
+    ##   `Total non-western` = col_double(),
+    ##   `Total non-western households` = col_double()
+    ## )
+
+``` r
+#add POSTNR_TXT to total df
+colnames(original_number)[1] <- c("POSTNR_TXT")
+
+test_gg <- add_original(test_gg, original_number)
+#log transform original number of households
+test_gg$data$log_acutal_number_households <- ifelse(test_gg$data$acutal_number_households>0, log(test_gg$data$acutal_number_households), test_gg$data$acutal_number_households)
+
+original <- test_gg + geom_polygon(aes(x = long, y = lat, group = group, fill = log_acutal_number_households), col="black") + 
+  scale_fill_gradientn(colours = c( "#ffffe5", "#fff7bc", "#fee391", "#fec44f", "#fe9929", "#ec7014", "#cc4c02", "#993404", "#662506")) + 
+  theme_void() + 
+  geom_text(data = cnames, aes(x = long, y = lat, label = id), size = 4) + 
+  labs(title = "Actual Number of Immigrant Households In Postcodes", fill = "Log-transformed \nNumber of Households")
+
+
+####################################### Arrange in grid #################################
+#grid.arrange(original, base_number, base_diff)
+```
+
+Arranging: Original + base simulation
+
+``` r
+original_base_plot <- grid.arrange(original, base_number, base_diff)
+```
+
+    ## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family not
+    ## found in Windows font database
+
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+    ## family not found in Windows font database
+
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+    ## family not found in Windows font database
+
+![](plots_ABM_files/figure-markdown_github/unnamed-chunk-4-1.png)
+
+Number of households in each postcode: Postcodes (8210 + 8220)
+restricted for 5 % of low income group (integrationsydelse initiative in
+Ghettoplan)
+
+``` r
+## Import aarhus data 
+post <- readOGR("postalcodes_aarhus.shp")
+```
+
+    ## OGR data source with driver: ESRI Shapefile 
+    ## Source: "C:\Users\stine\OneDrive\Cognitive Science\5th_Semester\bachelor\ABM_Aarhus\postalcodes_aarhus.shp", layer: "postalcodes_aarhus"
+    ## with 23 features
+    ## It has 2 fields
+
+``` r
+###################################### GG Int Simulation #################################
+#Import results 
+overview_int <- read.csv("results_int_1.csv")
+colnames(overview_int)[1] <- "POSTNR_TXT" # Making sure the column names are identical for merge
+#add the extra part of postcode
+overview_int <- rbind(overview_int[1:19,], overview_int[19,], overview_int[20:22,])
+
+# Make overview dataframe in same order as plotorder in post 
+overview_int$group <- seq(1:23)
+overview_int <- overview_int[match(post@plotOrder, overview_int$group),]
+overview_int$group <- seq(1:23) # Making the group variable identical to the one in gg object
+row.names(overview_int) <- seq(1:23)
+overview_int[23,1] <- 8472 # Change name of extra postcode so it can merge 
+
+# Add in postcode numbers
+post_merge <- sp::merge(post, overview_int, by = "POSTNR_TXT")
+
+shp_df <- broom::tidy(post_merge, region = "POSTNR_TXT")
+lapply(shp_df, class)
+```
+
+    ## $long
+    ## [1] "numeric"
+    ## 
+    ## $lat
+    ## [1] "numeric"
+    ## 
+    ## $order
+    ## [1] "integer"
+    ## 
+    ## $hole
+    ## [1] "logical"
+    ## 
+    ## $piece
+    ## [1] "factor"
+    ## 
+    ## $group
+    ## [1] "factor"
+    ## 
+    ## $id
+    ## [1] "character"
+
+``` r
+cnames <- aggregate(cbind(long, lat) ~ id, data=shp_df, FUN=mean)
+
+#Changing positions of postcode names that are on the borders 
+cnames[1,2] <- cnames[1,2]-sd(shp_df$long[shp_df$id==8000])
+cnames[7,2] <- cnames[7,2]-sd(shp_df$long[shp_df$id==8250])
+cnames[8,3] <- cnames[8,3]+sd(shp_df$lat[shp_df$id==8260])/2
+
+# Put in the data from simulation to be added as color gradient 
+gg_int <- ggplot(data = post)
+```
+
+    ## Regions defined for each Polygons
+
+``` r
+gg_int <- add_sim_to_gg(gg_int, overview_int)
+gg_int <- add_abs_diff_to_rest_gg(gg_int, overview_int)
+
+# plot with log transformed number of households in each postcode 
+#Log-transform 
+gg_int$data$log_number_immigrants <- ifelse(gg_int$data$number_immigrants>0, log(gg_int$data$number_immigrants), gg_int$data$number_immigrants)
+
+int_number <- gg_int + geom_polygon(aes(x = long, y = lat, group = group, fill = log_number_immigrants), col="black") + 
+  scale_fill_gradientn(colours = c( "#ffffe5", "#fff7bc", "#fee391", "#fec44f", "#fe9929", "#ec7014", "#cc4c02", "#993404", "#662506")) +
+  theme_void() + 
+  geom_text(data = cnames, aes(x = long, y = lat, label = id), size = 4) + 
+  labs(title = "Number of Households in Postcodes in Int-benefit Simulation \nLog-transformed", fill = "Log-Transformed \nNumber of Households")+ theme(plot.title = element_text(6))
+
+
+# Plot with absolute difference between integrationsydelse simulation and base simulation. Numbers are log-transformed
+gg_int$data$log_abs_diff_base_sim <- ifelse(gg_int$data$abs_diff_base_sim>0, log(gg_int$data$abs_diff_base_sim), gg_int$data$abs_diff_base_sim)
+
+int_difference <- gg_int + geom_polygon(aes(x = long, y = lat, group = group, fill = log_abs_diff_base_sim), col="black") + 
+  scale_fill_gradientn(colours = c( "#ffffe5", "#fff7bc", "#fee391", "#fec44f", "#fe9929", "#ec7014", "#cc4c02", "#993404", "#662506")) +
+  theme_void() + 
+  geom_text(data = cnames, aes(x = long, y = lat, label = id), size = 4) + 
+  labs(title = "Absolute Difference Between Number of Households in \nBase Simulation and Int-Benefit Restriction Simulation \nLog-transformed", fill = "Log-Transformed \ndifference")+ theme(plot.title = element_text(6))
+```
+
+Number of households in each postcode: Postcodes (8210 + 8220) removed
+from list of possible postcodes (Tearing down buildings initiative in
+Ghettoplan)
+
+``` r
+## Import aarhus data 
+post <- readOGR("postalcodes_aarhus.shp")
+```
+
+    ## OGR data source with driver: ESRI Shapefile 
+    ## Source: "C:\Users\stine\OneDrive\Cognitive Science\5th_Semester\bachelor\ABM_Aarhus\postalcodes_aarhus.shp", layer: "postalcodes_aarhus"
+    ## with 23 features
+    ## It has 2 fields
+
+``` r
+#################################### GG Build Simulation #################################
+#Import results 
+overview_build <- read.csv("results_build_1.csv")
+colnames(overview_build)[1] <- "POSTNR_TXT" # Making sure the column names are identical for merge
+#add the extra part of postcode
+overview_build <- rbind(overview_build[1:19,], overview_build[19,], overview_build[20:22,])
+
+# Make overview dataframe in same order as plotorder in post 
+overview_build$group <- seq(1:23)
+overview_build <- overview_build[match(post@plotOrder, overview_build$group),]
+overview_build$group <- seq(1:23) # Making the group variable identical to the one in gg object
+row.names(overview_build) <- seq(1:23)
+overview_build[23,1] <- 8472 # Change name of extra postcode so it can merge 
+
+# Add in postcode numbers
+post_merge <- sp::merge(post, overview_build, by = "POSTNR_TXT")
+
+shp_df <- broom::tidy(post_merge, region = "POSTNR_TXT")
+lapply(shp_df, class)
+```
+
+    ## $long
+    ## [1] "numeric"
+    ## 
+    ## $lat
+    ## [1] "numeric"
+    ## 
+    ## $order
+    ## [1] "integer"
+    ## 
+    ## $hole
+    ## [1] "logical"
+    ## 
+    ## $piece
+    ## [1] "factor"
+    ## 
+    ## $group
+    ## [1] "factor"
+    ## 
+    ## $id
+    ## [1] "character"
+
+``` r
+cnames <- aggregate(cbind(long, lat) ~ id, data=shp_df, FUN=mean)
+
+#Changing positions of postcode names that are on the borders 
+cnames[1,2] <- cnames[1,2]-sd(shp_df$long[shp_df$id==8000])
+cnames[7,2] <- cnames[7,2]-sd(shp_df$long[shp_df$id==8250])
+cnames[8,3] <- cnames[8,3]+sd(shp_df$lat[shp_df$id==8260])/2
+# Put in the data from simulation to be added as color gradient 
+gg_build <- ggplot(data = post)
+```
+
+    ## Regions defined for each Polygons
+
+``` r
+gg_build <- add_sim_to_gg(gg_build, overview_build)
+gg_build <- add_abs_diff_to_rest_gg(gg_build, overview_build)
+
+#Plot showing the number of immigrants households in each postcode. Log transformed 
+# log transform 
+gg_build$data$log_number_immigrants <- ifelse(gg_build$data$number_immigrants>0, log(gg_build$data$number_immigrants), gg_build$data$number_immigrants)
+
+build_number <- gg_build + geom_polygon(aes(x = long, y = lat, group = group, fill = log_number_immigrants), col="black") + 
+  scale_fill_gradientn(colours = c( "#ffffe5", "#fff7bc", "#fee391", "#fec44f", "#fe9929", "#ec7014", "#cc4c02", "#993404", "#662506")) +
+  theme_void() + 
+  geom_text(data = cnames, aes(x = long, y = lat, label = id), size = 4) + 
+  labs(title = "Number of Households in Postcodes in Demolishing Buildings Simulation \nLog-transformed", fill = "Log-Transformed \nNumber of Households")+ theme(plot.title = element_text(6))
+
+
+#Plot showing the absolute difference between the number of immigrants households in each postcode in the build simulation and the base simulation. Log transformed 
+# log transform 
+gg_build$data$log_abs_diff_base_sim <- ifelse(gg_build$data$abs_diff_base_sim>0, log(gg_build$data$abs_diff_base_sim), gg_build$data$abs_diff_base_sim)
+
+build_difference <- gg_build + geom_polygon(aes(x = long, y = lat, group = group, fill = log_abs_diff_base_sim), col="black") + 
+  scale_fill_gradientn(colours = c( "#ffffe5", "#fff7bc", "#fee391", "#fec44f", "#fe9929", "#ec7014", "#cc4c02", "#993404", "#662506")) +
+  theme_void() + 
+  geom_text(data = cnames, aes(x = long, y = lat, label = id), size = 4) + 
+  labs(title = "Absolute Difference Between Number of Households in \nBase Simulation and Demolishing Buildings Simulation \nLog-transformed", fill = "Log-Transformed \ndifference")+ theme(plot.title = element_text(6))
+```
+
+Arranging difference plots together
+
+``` r
+grid.arrange(base_number, int_difference, build_difference)
+```
+
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+    ## family not found in Windows font database
+
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+    ## family not found in Windows font database
+
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+    ## family not found in Windows font database
+
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+    ## family not found in Windows font database
+
+![](plots_ABM_files/figure-markdown_github/unnamed-chunk-7-1.png)
+
+Distribution of agent types in each postcode: Base\_kids\_high
+
+``` r
+## Import aarhus data 
+post <- readOGR("postalcodes_aarhus.shp")
+```
+
+    ## OGR data source with driver: ESRI Shapefile 
+    ## Source: "C:\Users\stine\OneDrive\Cognitive Science\5th_Semester\bachelor\ABM_Aarhus\postalcodes_aarhus.shp", layer: "postalcodes_aarhus"
+    ## with 23 features
+    ## It has 2 fields
+
+``` r
+############################ GG base_kids_high Simulation ############################
+#Import results 
+overview_kids_high <- read.csv("results_base_kids_high.csv")
+colnames(overview_kids_high)[1] <- "POSTNR_TXT" # Making sure the column names are identical for merge
+#add the extra part of postcode
+overview_kids_high <- rbind(overview_kids_high[1:19,], overview_kids_high[19,], overview_kids_high[20:22,])
+
+# Make overview dataframe in same order as plotorder in post 
+overview_kids_high$group <- seq(1:23)
+overview_kids_high <- overview_kids_high[match(post@plotOrder, overview_kids_high$group),]
+overview_kids_high$group <- seq(1:23) # Making the group variable identical to the one in gg object
+row.names(overview_kids_high) <- seq(1:23)
+overview_kids_high[23,1] <- 8472 # Change name of extra postcode so it can merge 
+
+# Add in postcode numbers
+post_merge <- sp::merge(post, overview_kids_high, by = "POSTNR_TXT")
+
+shp_df <- broom::tidy(post_merge, region = "POSTNR_TXT")
+lapply(shp_df, class)
+```
+
+    ## $long
+    ## [1] "numeric"
+    ## 
+    ## $lat
+    ## [1] "numeric"
+    ## 
+    ## $order
+    ## [1] "integer"
+    ## 
+    ## $hole
+    ## [1] "logical"
+    ## 
+    ## $piece
+    ## [1] "factor"
+    ## 
+    ## $group
+    ## [1] "factor"
+    ## 
+    ## $id
+    ## [1] "character"
+
+``` r
+cnames <- aggregate(cbind(long, lat) ~ id, data=shp_df, FUN=mean)
+
+#Changing positions of postcode names that are on the borders 
+cnames[1,2] <- cnames[1,2]-sd(shp_df$long[shp_df$id==8000])
+cnames[7,2] <- cnames[7,2]-sd(shp_df$long[shp_df$id==8250])
+cnames[8,3] <- cnames[8,3]+sd(shp_df$lat[shp_df$id==8260])/2
+# Put in the data from simulation to be added as color gradient 
+gg_kids_high <- ggplot(data = post)
+```
+
+    ## Regions defined for each Polygons
+
+``` r
+gg_kids_high <- add_sim_to_gg(gg_kids_high, overview_kids_high)
+
+#Plot showing the number of immigrant households in each postcode. Log transformed 
+# log transform
+gg_kids_high$data$log_number_immigrants <- ifelse(gg_kids_high$data$number_immigrants>0, log(gg_kids_high$data$number_immigrants), gg_kids_high$data$number_immigrants) 
+
+numb_kids_high <- gg_kids_high + geom_polygon(aes(x = long, y = lat, group = group, fill = log_number_immigrants), col="black") + 
+  scale_fill_gradientn(colours = c( "#ffffe5", "#fff7bc", "#fee391", "#fec44f", "#fe9929", "#ec7014", "#cc4c02", "#993404", "#662506")) +
+  theme_void() + 
+  geom_text(data = cnames, aes(x = long, y = lat, label = id), size = 4) + 
+  labs(title = "Number of Immigrant Households in Each Postcode \nAgent Type: With Kids-High Income", fill = "Log-Transformed \nNumber of Households")+ theme(plot.title = element_text(10))
+```
+
+Base\_no\_high
+
+``` r
+## Import aarhus data 
+post <- readOGR("postalcodes_aarhus.shp")
+```
+
+    ## OGR data source with driver: ESRI Shapefile 
+    ## Source: "C:\Users\stine\OneDrive\Cognitive Science\5th_Semester\bachelor\ABM_Aarhus\postalcodes_aarhus.shp", layer: "postalcodes_aarhus"
+    ## with 23 features
+    ## It has 2 fields
+
+``` r
+############################ GG base_kids_high Simulation ############################
+#Import results 
+overview_no_high <- read.csv("results_base_no_high.csv")
+colnames(overview_no_high)[1] <- "POSTNR_TXT" # Making sure the column names are identical for merge
+#add the extra part of postcode
+overview_no_high <- rbind(overview_no_high[1:19,], overview_no_high[19,], overview_no_high[20:22,])
+
+# Make overview dataframe in same order as plotorder in post 
+overview_no_high$group <- seq(1:23)
+overview_no_high <- overview_no_high[match(post@plotOrder, overview_no_high$group),]
+overview_no_high$group <- seq(1:23) # Making the group variable identical to the one in gg object
+row.names(overview_no_high) <- seq(1:23)
+overview_no_high[23,1] <- 8472 # Change name of extra postcode so it can merge 
+
+# Add in postcode numbers
+post_merge <- sp::merge(post, overview_no_high, by = "POSTNR_TXT")
+
+shp_df <- broom::tidy(post_merge, region = "POSTNR_TXT")
+lapply(shp_df, class)
+```
+
+    ## $long
+    ## [1] "numeric"
+    ## 
+    ## $lat
+    ## [1] "numeric"
+    ## 
+    ## $order
+    ## [1] "integer"
+    ## 
+    ## $hole
+    ## [1] "logical"
+    ## 
+    ## $piece
+    ## [1] "factor"
+    ## 
+    ## $group
+    ## [1] "factor"
+    ## 
+    ## $id
+    ## [1] "character"
+
+``` r
+cnames <- aggregate(cbind(long, lat) ~ id, data=shp_df, FUN=mean)
+
+#Changing positions of postcode names that are on the borders 
+cnames[1,2] <- cnames[1,2]-sd(shp_df$long[shp_df$id==8000])
+cnames[7,2] <- cnames[7,2]-sd(shp_df$long[shp_df$id==8250])
+cnames[8,3] <- cnames[8,3]+sd(shp_df$lat[shp_df$id==8260])/2
+# Put in the data from simulation to be added as color gradient 
+gg_no_high <- ggplot(data = post)
+```
+
+    ## Regions defined for each Polygons
+
+``` r
+gg_no_high <- add_sim_to_gg(gg_no_high, overview_no_high)
+
+#Plot showing the number of immigrant households in each postcode. Log transformed 
+# log transform
+gg_no_high$data$log_number_immigrants <- ifelse(gg_no_high$data$number_immigrants>0, log(gg_no_high$data$number_immigrants), gg_no_high$data$number_immigrants) 
+
+numb_no_high <- gg_no_high + geom_polygon(aes(x = long, y = lat, group = group, fill = log_number_immigrants), col="black") + 
+  scale_fill_gradientn(colours = c( "#ffffe5", "#fff7bc", "#fee391", "#fec44f", "#fe9929", "#ec7014", "#cc4c02", "#993404", "#662506")) +
+  theme_void() + 
+  geom_text(data = cnames, aes(x = long, y = lat, label = id), size = 4) + 
+  labs(title = "Number of Immigrant Households in Each Postcode \nAgent Type: No Kids-High Income", fill = "Log-Transformed \nNumber of Households")+ theme(plot.title = element_text(10))
+```
+
+Base\_kids\_low
+
+``` r
+## Import aarhus data 
+post <- readOGR("postalcodes_aarhus.shp")
+```
+
+    ## OGR data source with driver: ESRI Shapefile 
+    ## Source: "C:\Users\stine\OneDrive\Cognitive Science\5th_Semester\bachelor\ABM_Aarhus\postalcodes_aarhus.shp", layer: "postalcodes_aarhus"
+    ## with 23 features
+    ## It has 2 fields
+
+``` r
+############################ GG base_kids_high Simulation ############################
+#Import results 
+overview_kids_low <- read.csv("results_base_kids_low.csv")
+colnames(overview_kids_low)[1] <- "POSTNR_TXT" # Making sure the column names are identical for merge
+#add the extra part of postcode
+overview_kids_low <- rbind(overview_kids_low[1:19,], overview_kids_low[19,], overview_kids_low[20:22,])
+
+# Make overview dataframe in same order as plotorder in post 
+overview_kids_low$group <- seq(1:23)
+overview_kids_low <- overview_kids_low[match(post@plotOrder, overview_kids_low$group),]
+overview_kids_low$group <- seq(1:23) # Making the group variable identical to the one in gg object
+row.names(overview_kids_low) <- seq(1:23)
+overview_kids_low[23,1] <- 8472 # Change name of extra postcode so it can merge 
+
+# Add in postcode numbers
+post_merge <- sp::merge(post, overview_kids_low, by = "POSTNR_TXT")
+
+shp_df <- broom::tidy(post_merge, region = "POSTNR_TXT")
+lapply(shp_df, class)
+```
+
+    ## $long
+    ## [1] "numeric"
+    ## 
+    ## $lat
+    ## [1] "numeric"
+    ## 
+    ## $order
+    ## [1] "integer"
+    ## 
+    ## $hole
+    ## [1] "logical"
+    ## 
+    ## $piece
+    ## [1] "factor"
+    ## 
+    ## $group
+    ## [1] "factor"
+    ## 
+    ## $id
+    ## [1] "character"
+
+``` r
+cnames <- aggregate(cbind(long, lat) ~ id, data=shp_df, FUN=mean)
+
+#Changing positions of postcode names that are on the borders 
+cnames[1,2] <- cnames[1,2]-sd(shp_df$long[shp_df$id==8000])
+cnames[7,2] <- cnames[7,2]-sd(shp_df$long[shp_df$id==8250])
+cnames[8,3] <- cnames[8,3]+sd(shp_df$lat[shp_df$id==8260])/2
+# Put in the data from simulation to be added as color gradient 
+gg_kids_low <- ggplot(data = post)
+```
+
+    ## Regions defined for each Polygons
+
+``` r
+gg_kids_low <- add_sim_to_gg(gg_kids_low, overview_kids_low)
+
+#Plot showing the number of immigrant households in each postcode. Log transformed 
+# log transform
+gg_kids_low$data$log_number_immigrants <- ifelse(gg_kids_low$data$number_immigrants>0, log(gg_kids_low$data$number_immigrants), gg_kids_low$data$number_immigrants) 
+
+numb_kids_low <- gg_kids_low + geom_polygon(aes(x = long, y = lat, group = group, fill = log_number_immigrants), col="black") + 
+  scale_fill_gradientn(colours = c( "#ffffe5", "#fff7bc", "#fee391", "#fec44f", "#fe9929", "#ec7014", "#cc4c02", "#993404", "#662506")) +
+  theme_void() + 
+  geom_text(data = cnames, aes(x = long, y = lat, label = id), size = 4) + 
+  labs(title = "Number of Immigrant Households in Each Postcode \nAgent Type: With Kids-Low Income", fill = "Log-Transformed \nNumber of Households") + theme(plot.title = element_text(10))
+```
+
+Base\_no\_low
+
+``` r
+## Import aarhus data 
+post <- readOGR("postalcodes_aarhus.shp")
+```
+
+    ## OGR data source with driver: ESRI Shapefile 
+    ## Source: "C:\Users\stine\OneDrive\Cognitive Science\5th_Semester\bachelor\ABM_Aarhus\postalcodes_aarhus.shp", layer: "postalcodes_aarhus"
+    ## with 23 features
+    ## It has 2 fields
+
+``` r
+############################ GG base_kids_high Simulation ############################
+#Import results 
+overview_no_low <- read.csv("results_base_no_low.csv")
+colnames(overview_no_low)[1] <- "POSTNR_TXT" # Making sure the column names are identical for merge
+#add the extra part of postcode
+overview_no_low <- rbind(overview_no_low[1:19,], overview_no_low[19,], overview_no_low[20:22,])
+
+# Make overview dataframe in same order as plotorder in post 
+overview_no_low$group <- seq(1:23)
+overview_no_low <- overview_no_low[match(post@plotOrder, overview_no_low$group),]
+overview_no_low$group <- seq(1:23) # Making the group variable identical to the one in gg object
+row.names(overview_no_low) <- seq(1:23)
+overview_no_low[23,1] <- 8472 # Change name of extra postcode so it can merge 
+
+# Add in postcode numbers
+post_merge <- sp::merge(post, overview_no_low, by = "POSTNR_TXT")
+
+shp_df <- broom::tidy(post_merge, region = "POSTNR_TXT")
+lapply(shp_df, class)
+```
+
+    ## $long
+    ## [1] "numeric"
+    ## 
+    ## $lat
+    ## [1] "numeric"
+    ## 
+    ## $order
+    ## [1] "integer"
+    ## 
+    ## $hole
+    ## [1] "logical"
+    ## 
+    ## $piece
+    ## [1] "factor"
+    ## 
+    ## $group
+    ## [1] "factor"
+    ## 
+    ## $id
+    ## [1] "character"
+
+``` r
+cnames <- aggregate(cbind(long, lat) ~ id, data=shp_df, FUN=mean)
+
+#Changing positions of postcode names that are on the borders 
+cnames[1,2] <- cnames[1,2]-sd(shp_df$long[shp_df$id==8000])
+cnames[7,2] <- cnames[7,2]-sd(shp_df$long[shp_df$id==8250])
+cnames[8,3] <- cnames[8,3]+sd(shp_df$lat[shp_df$id==8260])/2
+
+# Put in the data from simulation to be added as color gradient 
+gg_no_low <- ggplot(data = post)
+```
+
+    ## Regions defined for each Polygons
+
+``` r
+gg_no_low <- add_sim_to_gg(gg_no_low, overview_no_low)
+
+#Plot showing the number of immigrant households in each postcode. Log transformed 
+# log transform
+gg_no_low$data$log_number_immigrants <- ifelse(gg_no_low$data$number_immigrants>0, log(gg_no_low$data$number_immigrants), gg_no_low$data$number_immigrants) 
+
+numb_no_low <- gg_no_low + geom_polygon(aes(x = long, y = lat, group = group, fill = log_number_immigrants), col="black") + 
+  scale_fill_gradientn(colours = c( "#ffffe5", "#fff7bc", "#fee391", "#fec44f", "#fe9929", "#ec7014", "#cc4c02", "#993404", "#662506")) +
+  theme_void() + 
+  geom_text(data = cnames, aes(x = long, y = lat, label = id), size = 4) + 
+  labs(title = "Number of Immigrant Households in Each Postcode \nAgent Type: No Kids-Low Income", fill = "Log-Transformed \nNumber of Households") + theme(plot.title = element_text(10))
+```
+
+Arranging the plots in a grid
+
+``` r
+grid.arrange(numb_kids_high, numb_kids_low, numb_no_high, numb_no_low)
+```
+
+    ## Warning in grid.Call(C_stringMetric, as.graphicsAnnot(x$label)): font family not
+    ## found in Windows font database
+
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+    ## family not found in Windows font database
+
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+    ## family not found in Windows font database
+
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+    ## family not found in Windows font database
+
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+    ## family not found in Windows font database
+
+    ## Warning in grid.Call(C_textBounds, as.graphicsAnnot(x$label), x$x, x$y, : font
+    ## family not found in Windows font database
+
+![](plots_ABM_files/figure-markdown_github/unnamed-chunk-12-1.png)
+
+Table of numbers of immigrants households in each postcode: Original
+vs. Base vs. Int vs. Build
+
+``` r
+#Sort like original numbers
+overview_1_sorted <- overview_1[match(original_number$POSTNR_TXT, overview_1$POSTNR_TXT),]
+overview_build_sorted <- overview_build[match(original_number$POSTNR_TXT, overview_build$POSTNR_TXT),]
+overview_int_sorted <- overview_int[match(original_number$POSTNR_TXT, overview_int$POSTNR_TXT),]
+
+
+table_of_numbers <- data.frame(
+  Postcode = original_number$POSTNR_TXT,
+  actual_number_households = original_number$`Total non-western households`,
+  base_simulation_diff_real = original_number$`Total non-western households`- overview_1_sorted$base_line,
+  number_of_households_base = overview_1_sorted$base_line,
+  int_simulation_diff_base = overview_1_sorted$base_line-overview_int_sorted$base_line,
+  build_simulaion_diff_base = overview_1_sorted$base_line-overview_build_sorted$base_line)
+
+in_total <- c("In total",
+              sum(abs(original_number$`Total non-western households`)),
+              sum(abs(overview_1_sorted$dif_vs_real)), 
+              sum(abs(overview_1_sorted$base_line)),
+              sum(abs(overview_int_sorted$dif_vs_base)), 
+              sum(abs(overview_build_sorted$dif_vs_base)))
+
+
+table_of_numbers <- rbind(table_of_numbers, in_total)
+
+#Change the column names 
+colnames(table_of_numbers) <- c("Postcode", "Real Number of \nImmigrant Households", "Base Simulation: Difference \nbetween Base Sim and Real Number", "Number of Households in \nBase Simulation",  "Int-Benefit Simulation: Difference \nbetween Int-Benefit and Base Sim", "Building Simulation: Difference \nbetween Building and Base Sim")
+
+#Save as png 
+# png("table_of_numbers.png", height = 50*nrow(table_of_numbers), width = 200*ncol(table_of_numbers))
+# grid.table(table_of_numbers)
+# dev.off()
+```
